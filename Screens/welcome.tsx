@@ -1,8 +1,10 @@
 import { View,Text,Image,Pressable,StyleSheet } from "react-native";
 import { FONTS } from "../utils/fonts";
+import { useNavigation } from "@react-navigation/native";
 
 
-export default function WelcomeScreen(){    
+export default function WelcomeScreen() {
+    const navigation = useNavigation(); 
     return(
         <View style={styles.container}>
             <View style={styles.logoContainer}>
@@ -26,15 +28,31 @@ export default function WelcomeScreen(){
                 
                 <Text style={styles.subtitle}>Your Mediterranean Escape</Text>
 
-            <Pressable 
-            style= {({pressed})=>[
-                styles.button,
-                {
-                    backgroundColor: pressed ? "#F4CE14" : "#EE9972",}
-            ]}>
+            <Pressable
+                style={({ pressed }) => [
+                    styles.button,
+                    {
+                        backgroundColor: pressed ? "#F4CE14" : "#EE9972",
+                    },
+                ]}
+                onPress={() => navigation.navigate ("Onboarding")} 
+            >
                 
                 <Text style={styles.buttonText}>Get started</Text>
 
+            </Pressable>
+
+            <Pressable
+                style={({ pressed }) => [
+                    styles.button,
+                    { 
+                        backgroundColor: pressed ? "#F4CE14" : "#EDEFEE",
+                        marginTop: 20
+                    }
+                ]}
+                onPress={() => navigation.navigate("Login")}
+            >
+                <Text style={[styles.buttonText, { color: '#333' }]}>Login</Text>
             </Pressable>
             
         </View>
