@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 // Define a User type for better type safety
 type UserData = {
   firstName: string;
@@ -15,47 +16,43 @@ export const isLoggedIn = async (): Promise<boolean> => {
     const token = await AsyncStorage.getItem('userToken');
     return token !== null;
   } catch (e) {
-    console.error('Login check error:',e);
+    console.error('Login check error:', e);
     return false;
   }
 };
 
 // Login function with password verification
 export const loginUser = async (email: string, password: string): Promise<boolean> => {
+  
   try {
-     // Get all registered users
     const usersJSON = await AsyncStorage.getItem('registeredUsers');
-    if (!usersJSON) {
-    throw new Error('No registered users found');
-    }
-
+    if (!usersJSON) throw new Error('No registered users found');
+    
     const registeredUsers: UserData[] = JSON.parse(usersJSON);
-
-    // Find user by email
-    const user = registeredUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const user = registeredUsers.find(u => 
+      u.email.toLowerCase() === email.toLowerCase()
+    );
     
-    // Verify password (case-sensitive)
-    if (!user) {
-      throw new Error('Email not registered');
-    }
+    if (!user) throw new Error('Email not registered');
+    if (user.password !== password) throw new Error('Incorrect password');
     
-    if (user.password !== password) {
-      throw new Error('Incorrect password');
-    }
-    
+    // Store token and current user (without password)
     await AsyncStorage.setItem('userToken', 'dummy_token');
+    
+    // Save current user without password
+    const { password: _, ...safeUser } = user;
+    await AsyncStorage.setItem('currentUser', JSON.stringify(safeUser));
+    
     return true;
   } catch (e) {
     console.error('Login error:', e);
-    throw e; // Re-throw the error
+    throw e;
   }
 };
     
-   
-
 // Complete onboarding (Sign up)
 export const completeOnboarding = async (userData: UserData): Promise<void> => {
-   try {
+  try {
     // Get existing users
     const usersJSON = await AsyncStorage.getItem('registeredUsers');
     const existingUsers: UserData[] = usersJSON ? JSON.parse(usersJSON) : [];
@@ -71,8 +68,13 @@ export const completeOnboarding = async (userData: UserData): Promise<void> => {
     // Save all users
     await AsyncStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
     
-    // Set current session token
+    // Set current session token and mark onboarding as complete
     await AsyncStorage.setItem('userToken', 'dummy_token');
+    await AsyncStorage.setItem('onboarded', 'true'); // Add this
+    
+    // Save current user without password
+    const { password, ...safeUser } = userData;
+    await AsyncStorage.setItem('currentUser', JSON.stringify(safeUser));
   } catch (e) {
     console.error('Onboarding storage error:', e);
     throw e;
@@ -80,30 +82,34 @@ export const completeOnboarding = async (userData: UserData): Promise<void> => {
 };
 
 export const hasCompletedOnboarding = async (): Promise<boolean> => {
-    try {
-        const userData = await AsyncStorage.getItem('userData');
-        return userData !== null;
-    } catch (e) {
-        console.error('Onboarding check error:', e);
-        return false;
-    }
-    };
-
+  try {
+    // Check if user has completed onboarding
+    const onboarded = await AsyncStorage.getItem('onboarded');
+    return onboarded === 'true';
+  } catch (e) {
+    console.error('Onboarding check error:', e);
+    return false;
+  }
+};
 
 // Logout function
 export const logoutUser = async (): Promise<void> => {
-    try {
-        // Only remove token, keep user data
-        await AsyncStorage.removeItem('userToken');
-    } catch (e) {
-        console.error('Logout error:', e);
-        throw new Error('Logout failed');
-    }
-    };
+  try {
+    // Remove all auth-related data
+    await AsyncStorage.multiRemove([
+      'userToken',
+      'currentUser'
+    ]);
+  } catch (e) {
+    console.error('Logout error:', e);
+    throw new Error('Logout failed');
+  }
+};
 
+// Get user data
 export const getUserData = async (): Promise<UserData | null> => {
   try {
-    const userData = await AsyncStorage.getItem('userData');
+    const userData = await AsyncStorage.getItem('currentUser');
     return userData ? JSON.parse(userData) : null;
   } catch (e) {
     console.error('Get user data error:', e);
@@ -122,6 +128,76 @@ export const getRegisteredUsers = async (): Promise<UserData[]> => {
   }
 };
 
+// To get the current user
+export const getCurrentUser = async (): Promise<UserData | null> => {
+  try {
+    const userData = await AsyncStorage.getItem('currentUser');
+    return userData ? JSON.parse(userData) : null;
+  } catch (e) {
+    console.error('Get current user error:', e);
+    return null;
+  }
+};
+
+// Update user data
+export const updateUser = async (updatedData: UserData): Promise<boolean> => {
+  try {
+    // Get current user email to find them in registered users
+    const currentUser = await getCurrentUser();
+    if (!currentUser) return false;
+    
+    // Update current user
+    await AsyncStorage.setItem('currentUser', JSON.stringify(updatedData));
+    
+    // Update in registered users list
+    const usersJSON = await AsyncStorage.getItem('registeredUsers');
+    if (!usersJSON) return false;
+    
+    const users: UserData[] = JSON.parse(usersJSON);
+    const updatedUsers = users.map(user => 
+      user.email.toLowerCase() === currentUser.email.toLowerCase() 
+        ? {...user, ...updatedData} 
+        : user
+    );
+    
+    await AsyncStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+    return true;
+  } catch (e) {
+    console.error('Update user error:', e);
+    return false;
+  }
+};
+
+// Delete account
+export const deleteAccount = async (email: string): Promise<boolean> => {
+  try {
+    // Get registered users
+    const usersJSON = await AsyncStorage.getItem('registeredUsers');
+    if (!usersJSON) return false;
+    
+    // Filter out deleted user
+    const users: UserData[] = JSON.parse(usersJSON);
+    const updatedUsers = users.filter(user => 
+      user.email.toLowerCase() !== email.toLowerCase()
+    );
+    
+    // Save updated list
+    await AsyncStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+    
+    // Clear all auth-related data
+    await AsyncStorage.multiRemove([
+      'userToken',
+      'currentUser',
+      'onboarded'
+    ]);
+    
+    return true;
+  } catch (e) {
+    console.error('Delete account error:', e);
+    return false;
+  }
+};
+
 export default {
   loginUser,
   logoutUser,
@@ -129,5 +205,8 @@ export default {
   hasCompletedOnboarding,
   isLoggedIn,
   getUserData,
-  getRegisteredUsers
+  getRegisteredUsers,
+  getCurrentUser,
+  updateUser,
+  deleteAccount
 };

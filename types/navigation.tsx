@@ -1,3 +1,4 @@
+// Define your navigation types
 export type RootStackParamList = {
   Welcome: undefined;
   Onboarding: undefined;

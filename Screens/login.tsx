@@ -1,25 +1,24 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Animated } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Animated, ActivityIndicator } from 'react-native';
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { loginUser } from '../utils/auth';
+import { useAuth } from '../context/AuthContext';
+
 
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
+  const { login } = useAuth();
   const [loginHover, setLoginHover] = useState(false);
   const [errorAnim] = useState(new Animated.Value(0));
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const [showPassword, setShowPassword] = useState(false); // State to track password visibility
-
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add loading state
   const shakeAnimation = useRef(new Animated.Value(0)).current;
-
-
 
   // Validation schema
   const loginSchema = yup.object().shape({
@@ -45,38 +44,18 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     }]
   };
 
-  // Create shake animation function
+  // Shake animation function
   const animateLoginError = () => {
     Animated.sequence([
-      Animated.timing(shakeAnimation, {
-        toValue: 10,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: -10,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: 10,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
+      Animated.timing(shakeAnimation, { toValue: 10, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: -10, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: 10, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: 0, duration: 100, useNativeDriver: true }),
     ]).start();
   };
 
-
-  
-
   return (
     <View style={styles.container}>
-      {/* Navbar */}
       <View style={styles.navbar}>
         <Image source={require('../assets/branding/Logo.png')} style={styles.logo} />
       </View>
@@ -90,48 +69,54 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         <Formik
           initialValues={{ email: '', password: '' }}
           validationSchema={loginSchema}
-          onSubmit={ async (values) => {
-            try{
-            setLoginError(null); // Reset error message
-            const success = await loginUser(values.email, values.password);
-            if (success){
-              navigation.reset({
-                index: 0,
-                routes: [{name:'Home'}],
-              });
-            } else {
+          onSubmit={async (values) => {
+            try {
+              setIsSubmitting(true);
+              setLoginError(null);
+              
+              const success = await loginUser(values.email, values.password);
+              if (success) {
+                login(); // Update auth context
+                navigation.reset({
+                  index: 0,
+                  routes: [{name:'Home'}],
+                });
+              } else {
+                animateLoginError();
+                setLoginError('Invalid email or password');
+              }
+            } catch (e: any) {
               animateLoginError();
-              setLoginError('Invalid email or password');
+              if (e.message === 'Email not registered') {
+                setLoginError('Email not found. Please sign up first.');
+              } else if (e.message === 'Incorrect password') {
+                setLoginError('Incorrect password. Please try again.');
+              } else {
+                setLoginError('Login failed. Please try again.');
+              }
+            } finally {
+              setIsSubmitting(false);
             }
-          } catch (e:any){
-            animateLoginError();
-            if (e.message === 'Email not registered') {
-              setLoginError('Email not found. Please sign up first.');
-            } else if (e.message === 'Incorrect password') {
-              setLoginError('Incorrect password. Please try again.');
-            } else {
-              setLoginError('Login failed. Please try again.');
-                    }
           }}
-        }
         >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
-          <Animated.View 
-                style={[
-                  styles.form, 
-                  { transform: [{ translateX: shakeAnimation }] }
-                ]}
-              >
-
-             {/* Email field */}
+            <Animated.View 
+              style={[
+                styles.form, 
+                { transform: [{ translateX: shakeAnimation }] }
+              ]}
+            >
+              {/* Form fields */}
+              
               <View style={styles.inputGroup}>
                 <TextInput
-                  style={[styles.input,
-                    loginError && styles.inputError]
-                  }
-
+                  style={[
+                    styles.input,
+                    loginError && styles.inputError
+                  ]}
                   placeholder="Email"
                   keyboardType="email-address"
+                  autoCapitalize="none"
                   onChangeText={handleChange('email')}
                   onBlur={handleBlur('email')}
                   value={values.email}
@@ -166,7 +151,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 )}
               </View>
 
-              {/* Login error message */}
               {loginError && (
                 <Text style={styles.loginError}>{loginError}</Text>
               )}
@@ -174,11 +158,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <TouchableOpacity 
                 style={[
                   styles.submitButton,
-                  loginError && styles.submitButtonError
+                  loginError && styles.submitButtonError,
+                  isSubmitting && styles.disabledButton
                 ]} 
-                onPress={() => {handleSubmit()}}
+                onPress={() => handleSubmit()}
+                disabled={isSubmitting}
               >
-                <Text style={styles.buttonText}>Login</Text>
+                {isSubmitting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={styles.buttonText}>Login</Text>
+                )}
               </TouchableOpacity>
             </Animated.View>
           )}
@@ -246,7 +236,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Karla-Regular',
   },
-   inputError: {
+  inputError: {
     borderColor: 'red',
     backgroundColor: '#FFF0F0',
   },
@@ -266,9 +256,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 50,
+  },
+  disabledButton: {
+    backgroundColor: '#AAAAAA',
   },
   submitButtonError: {
-  backgroundColor: '#FF6B6B',
+    backgroundColor: '#FF6B6B',
   },
   buttonText: {
     color: 'white',
@@ -289,9 +284,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Karla-Bold',
   },
   passwordToggle: {
-  position: 'absolute',
-  right: 15,
-  top: 15,
+    position: 'absolute',
+    right: 15,
+    top: 15,
   },
   toggleText: {
     color: '#495E57',

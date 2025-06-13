@@ -26,15 +26,16 @@ const  OnboardingScreen : React.FC<OnboardingScreenProps> = ({navigation}) =>{
     }]
   };
 
-   // Corrected validation schema
+   // validation with schema 
   const signupSchema = yup.object().shape({
-
     firstName: yup.string().required('First name is required'),
     lastName: yup.string().required('Last name is required'),
     email: yup.string().email('Invalid email').required('Email is required'),
     password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-    phone: yup.string().matches(/^[0-9]{10}$/, 'Invalid phone number').nullable(),
-});
+    phone: yup.string()
+      .matches(/^[0-9\s-]{10,15}$/, 'Invalid phone number (10-15 digits)')
+      .nullable(),
+  });
 
    const animateError = () => {
     Animated.sequence([
@@ -61,7 +62,6 @@ const  OnboardingScreen : React.FC<OnboardingScreenProps> = ({navigation}) =>{
       {/*Slogan with background */}
 
       <View style={styles.sloganContainer}>
-
         <Text style={styles.slogan}>
           Join our familly table for exclusive offers, seasonal feasts with Mediterranean flavors.
         </Text>
@@ -81,12 +81,13 @@ const  OnboardingScreen : React.FC<OnboardingScreenProps> = ({navigation}) =>{
             phone: ''}}
 
           validationSchema={signupSchema}
-          onSubmit={async (values) => {
+          onSubmit={async (values, { setSubmitting }) => {
             try {
-              const userData = {  
+              // Clean phone number (remove non-digit characters)
+              const cleanedValues = {
                 ...values,
-                password:'demoPassword' //  Adding password for demo purpose
-              }
+                phone: values.phone ? values.phone.replace(/\D/g, '') : undefined
+              };
               await completeOnboarding(values);
               navigation.reset({
                 index: 0,
@@ -94,15 +95,23 @@ const  OnboardingScreen : React.FC<OnboardingScreenProps> = ({navigation}) =>{
               });
             } catch (e) {
               console.error('Onboarding error:', e);
-              animateError();
-              setErrorMessage('Failed to create account. Please try again.');          
+              animateError();  
+              
+              // Set specific error messages
+              if (errorMessage=== 'Email already registered') {
+                setErrorMessage('This email is already registered. Please login instead.');
+              } else {
+                setErrorMessage('Failed to create account. Please try again.');
+              }
+            } finally {
+              setSubmitting(false);
             }
           }}
         >
           
 
-          {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
-            <View style={styles.form}>
+          {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting, isValid }) => (
+             <View style={styles.form}>
               <View style={styles.inputGroup}>
                 <TextInput
                   style={styles.input}
@@ -124,7 +133,7 @@ const  OnboardingScreen : React.FC<OnboardingScreenProps> = ({navigation}) =>{
                   placeholder="Last Name*"
                   onChangeText={handleChange('lastName')}
                   onBlur={handleBlur('lastName')}
-                  value = {values.lastName}
+                  value={values.lastName}
                 />
                 {touched.lastName && errors.lastName && (
                   <Animated.Text style={[styles.error, errorStyle]}>
@@ -138,6 +147,7 @@ const  OnboardingScreen : React.FC<OnboardingScreenProps> = ({navigation}) =>{
                   style={styles.input}
                   placeholder="Email*"
                   keyboardType="email-address"
+                  autoCapitalize="none"
                   onChangeText={handleChange('email')}
                   onBlur={handleBlur('email')}
                   value={values.email}
@@ -165,7 +175,7 @@ const  OnboardingScreen : React.FC<OnboardingScreenProps> = ({navigation}) =>{
                 )}
               </View>
 
-              <View style={styles.inputGroup}>
+            <View style={styles.inputGroup}>
                 <TextInput
                   style={styles.input}
                   placeholder="Phone (optional)"
@@ -190,29 +200,33 @@ const  OnboardingScreen : React.FC<OnboardingScreenProps> = ({navigation}) =>{
               ) : null}
 
               <TouchableOpacity
-                style={styles.submitButton}
+                style={[
+                  styles.submitButton,
+                  (isSubmitting || !isValid) && styles.disabledButton
+                ]}
                 onPress={() => {
-                  if (Object.keys(errors).length > 0) animateError();
+                  if (!isValid) animateError();
                   handleSubmit();
                 }}
+                disabled={isSubmitting || !isValid}
               >
-                <Text style={styles.buttonText}>Sign Up</Text>
+                <Text style={styles.buttonText}>
+                  {isSubmitting ? 'Creating Account...' : 'Sign Up'}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
 
        </Formik>
 
-       <TouchableOpacity
-        onPress={()=> navigation.navigate('Login')}
-        onPressIn={()=> setLoginHover(true)}
-        onPressOut={()=> setLoginHover(false)}
-        style={[styles.loginLink, loginHover && styles.loginHover]}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Login')}
+          onPressIn={() => setLoginHover(true)}
+          onPressOut={() => setLoginHover(false)}
+          style={[styles.loginLink, loginHover && styles.loginHover]}
         >
           <Text style={styles.loginText}>Already have an account? Login</Text>
-        
         </TouchableOpacity>
-        
       </View>
     </View>
   )
@@ -253,11 +267,6 @@ const styles = StyleSheet.create({
     fontSize: 64,
     fontFamily: 'MarkaziText-Medium',
     color: '#333',
-  },
-  subtitle: {
-    fontSize: 40,
-    fontFamily: 'MarkaziText-Regular',
-    color: '#495E57',
   },
   sloganContainer: {
     flexDirection: 'row',
@@ -307,6 +316,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#AAAAAA',
   },
   buttonText: {
     color: 'white',

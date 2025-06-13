@@ -1,13 +1,44 @@
-import { View,Text,Image,Pressable,StyleSheet } from "react-native";
+import { View, Text, Image, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { FONTS } from "../utils/fonts";
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from "../types/navigation";
+import { useAuth } from "../context/AuthContext"; // Add this
+import { useFocusEffect } from '@react-navigation/native'; // Add this
+import { useEffect, useState } from "react"; // Add this
 
-type HomeScreenProps = NativeStackScreenProps<RootStackParamList,'Home'>;
+type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
-const  HomeScreen : React.FC<HomeScreenProps> = ({navigation}) =>{
- 
+const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+  const { isAuthenticated } = useAuth(); // Get auth status
+  const [loading, setLoading] = useState(true); // Loading state
+
+  // Check authentication status on focus
+  useFocusEffect(() => {
+    const checkAuth = async () => {
+      if (!isAuthenticated) {
+        // Redirect to Welcome screen if not authenticated
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Welcome' }],
+        });
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  });
+
+  // Show loading indicator while checking auth status
+  if (loading) {
     return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#495E57" />
+      </View>
+    );
+  }
+
+  return (
     <View style={styles.container}>
       <View style={styles.navbar}>
         <Image source={require('../assets/branding/Logo.png')} style={styles.logo} />
@@ -85,6 +116,12 @@ const styles = StyleSheet.create({
     fontFamily: 'MarkaziText-Regular',
     color: '#333',
     marginBottom: 15,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#EDEFEE',
   },
 });
 

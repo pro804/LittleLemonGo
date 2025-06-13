@@ -54,7 +54,6 @@ export default function WelcomeScreen() {
             >
                 <Text style={[styles.buttonText, { color: '#333' }]}>Login</Text>
             </Pressable>
-            
         </View>
     )
 }
