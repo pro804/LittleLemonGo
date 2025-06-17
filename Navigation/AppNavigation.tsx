@@ -9,6 +9,8 @@ import LoginScreen from '../Screens/login';
 import ProfileScreen from '../Screens/profile';
 import { useAuth } from '../context/AuthContext'; // Add this
 import { RootStackParamList } from '../types/navigation';
+import MenuItemDetailsScreen from '../Screens/menuItemDetail';
+import { FONTS } from '../utils/fonts';
 
 const stack = createStackNavigator<RootStackParamList>();
 
@@ -38,6 +40,21 @@ export default function AppNavigator() {
         <stack.Screen name='Login' component={LoginScreen}/>
         <stack.Screen name='Home' component={homeScreen}/>
         <stack.Screen name='Profile' component={ProfileScreen}/>
+        <stack.Screen 
+        name='MenuItemDetails'
+        component={MenuItemDetailsScreen}
+        options={({ route }) => ({ 
+          title: route.params.menuItem.title,
+          headerStyle: {
+            backgroundColor: '#495E57',
+          },
+          headerTintColor: '#FFF',
+          headerTitleStyle: {
+            fontFamily: FONTS.karlaBold,
+            fontSize: 20,
+          },
+        })}
+      />
       </stack.Navigator>
     </NavigationContainer>
   );
