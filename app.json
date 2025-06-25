@@ -4,24 +4,40 @@
     "slug": "LittleLemonGo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "/home/giwrgosp/Desktop/LittleLemonGo/assets/images/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/images/Littlelemon_splash_icon.png",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    
     "splash": {
-      "image": "assets/images/splash-icon.png",
-      "resizeMode": "contain",
+      "image": "./assets/images/Littlelemon_splash_icon.png",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
+      
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "splash": {
+        "image": "./assets/images/Littlelemon_splash_icon.png",
+        "backgroundColor": "#ffffff",
+        "resizeMode": "cover",
+        "tabletImage": "./assets/images/Littlelemon_splash_icon.png"
+        
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "splash": {
+        "image": "./assets/images/Littlelemon_splash_icon.png",
+        "resizeMode": "cover",
+        "backgroundColor": "#ffffff"
+        
+
       }
     },
     "web": {

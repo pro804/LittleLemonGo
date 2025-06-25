@@ -4,18 +4,17 @@ import {
   Text, 
   Image,
   Pressable,
-  StyleSheet,
   ScrollView,
   TextInput,
   Switch,
   Animated, 
   Alert } from 'react-native';
+import ProfileStyles from '../Styles/ProfileStyles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MaterialIcons } from '@expo/vector-icons';
-import { FONTS } from '../utils/fonts';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import { getRegisteredUsers, updateUser, deleteAccount, } from '../utils/auth';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
@@ -197,79 +196,79 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   if (!userData) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading profile...</Text>
+      <SafeAreaView style={ProfileStyles.safeArea}>
+        <View style={ProfileStyles.loadingContainer}>
+          <Text style={ProfileStyles.loadingText}>Loading profile...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.navbar}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.navButton}>
-          <MaterialIcons name="arrow-back" size={28} color="#495E57" />
+    <SafeAreaView style={ProfileStyles.safeArea}>
+      <View style={ProfileStyles.navbar}>
+        <Pressable onPress={() => navigation.goBack()} style={ProfileStyles.navButton}>
+          <AntDesign name="leftcircle" size={32} color="#495E57" />
         </Pressable>
         
         <Image 
           source={require('../assets/branding/Logo.png')} 
-          style={styles.logo} 
+          style={ProfileStyles.logo} 
         />
         
-        <Pressable onPress={() => navigation.navigate('Profile')} style={styles.navButton}>
+        <Pressable onPress={() => navigation.navigate('Profile')} style={ProfileStyles.navButton}>
           <Image 
             source={require('../assets/images/Profile.png')} 
-            style={styles.profileIcon} 
+            style={ProfileStyles.profileIcon} 
           />
         </Pressable>
       </View>
 
       <ScrollView 
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.scrollContent}
+        style={ProfileStyles.scrollContainer}
+        contentContainerStyle={ProfileStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.card}>
-          <Text style={styles.cardHeader}>Personal Information</Text>
+        <View style={ProfileStyles.card}>
+          <Text style={ProfileStyles.cardHeader}>Personal Information</Text>
           
-          <View style={styles.profileSection}>
+          <View style={ProfileStyles.profileSection}>
             <Image 
               source={require('../assets/images/Profile.png')}
-              style={styles.profileImage} 
+              style={ProfileStyles.profileImage} 
             />
             
-            <View style={styles.imageActions}>
+            <View style={ProfileStyles.imageActions}>
               <Pressable 
                 style={({ pressed }) => [
-                  styles.imageButton,
+                  ProfileStyles.imageButton,
                   { backgroundColor: pressed ? '#F4CE14' : '#495E57' }
                 ]}
                 onPress={() => console.log('Change image')}
               >
-                <Text style={styles.buttonText}>Change</Text>
+                <Text style={ProfileStyles.buttonText}>Change</Text>
               </Pressable>
               
               <Pressable 
                 style={({ pressed }) => [
-                  styles.imageButton,
+                  ProfileStyles.imageButton,
                   { backgroundColor: pressed ? '#FF6B6B' : '#EE9972' }
                 ]}
                 onPress={() => console.log('Remove image')}
               >
-                <Text style={styles.buttonText}>Remove</Text>
+                <Text style={ProfileStyles.buttonText}>Remove</Text>
               </Pressable>
             </View>
           </View>
           
           {/* Form section */}
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>First Name *</Text>
+          <View style={ProfileStyles.form}>
+            <View style={ProfileStyles.inputGroup}>
+              <Text style={ProfileStyles.inputLabel}>First Name *</Text>
               <TextInput
                 style={[
-                  styles.input,
-                  isEditing ? styles.editingInput : styles.staticInput
+                  ProfileStyles.input,
+                  isEditing ? ProfileStyles.editingInput : ProfileStyles.staticInput
                 ]}
                 value={userData.firstName}
                 onChangeText={(text) => setUserData({...userData,firstName: text})}
@@ -278,12 +277,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Last Name *</Text>
+            <View style={ProfileStyles.inputGroup}>
+              <Text style={ProfileStyles.inputLabel}>Last Name *</Text>
               <TextInput
                 style={[
-                  styles.input,
-                  isEditing ? styles.editingInput : styles.staticInput
+                  ProfileStyles.input,
+                  isEditing ? ProfileStyles.editingInput : ProfileStyles.staticInput
                 ]}
                 value={userData.lastName}
                 onChangeText={(text) => setUserData({...userData, lastName: text})}
@@ -292,24 +291,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email *</Text>
+            <View style={ProfileStyles.inputGroup}>
+              <Text style={ProfileStyles.inputLabel}>Email *</Text>
               <TextInput
                 style={[
-                  styles.input,
-                  styles.disabledInput
+                  ProfileStyles.input,
+                  ProfileStyles.disabledInput
                 ]}
                 value={userData.email}
                 editable={false}
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Phone Number</Text>
+            <View style={ProfileStyles.inputGroup}>
+              <Text style={ProfileStyles.inputLabel}>Phone Number</Text>
               <TextInput
                 style={[
-                  styles.input,
-                  isEditing ? styles.editingInput : styles.staticInput
+                  ProfileStyles.input,
+                  isEditing ? ProfileStyles.editingInput : ProfileStyles.staticInput
                 ]}
                 value={userData.phone || ''}
                 onChangeText={(text) => setUserData({...userData, phone: text})}
@@ -320,14 +319,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </View>
 
             {isEditing && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Change Password</Text>
-                <View style={styles.passwordContainer}>
+              <View style={ProfileStyles.inputGroup}>
+                <Text style={ProfileStyles.inputLabel}>Change Password</Text>
+                <View style={ProfileStyles.passwordContainer}>
                   <TextInput
                     style={[
-                      styles.input,
-                      styles.passwordInput,
-                      isEditing ? styles.editingInput : styles.staticInput
+                      ProfileStyles.input,
+                      ProfileStyles.passwordInput,
+                      isEditing ? ProfileStyles.editingInput : ProfileStyles.staticInput
                     ]}
                     value={userData.password}
                     onChangeText={(text) => setUserData({...userData, password: text})}
@@ -336,24 +335,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                     placeholder="Enter new password"
                   />
                   <Pressable
-                    style={styles.toggleButton}
+                    style={ProfileStyles.toggleButton}
                     onPress={() => setShowPassword(!showPassword)}
                   >
-                    <Text style={styles.toggleText}>
+                    <Text style={ProfileStyles.toggleText}>
                       {showPassword ? 'Hide' : 'Show'}
                     </Text>
                   </Pressable>
                 </View>
-                <Text style={styles.passwordHint}>
+                <Text style={ProfileStyles.passwordHint}>
                   {userData.password ? 'Password will be updated' : 'Leave blank to keep current password'}
                 </Text>
               </View>
             )}
 
-            <View style={styles.buttonGroup}>
+            <View style={ProfileStyles.buttonGroup}>
               <Pressable
                 style={({ pressed }) => [
-                  styles.editButton,
+                  ProfileStyles.editButton,
                   { 
                     backgroundColor: pressed ? '#F4CE14' : isEditing ? '#495E57' : '#EDEFEE',
                     marginRight: 10
@@ -361,7 +360,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 ]}
                 onPress={() => isEditing ? handleUpdate() : setIsEditing(true)}
               >
-                <Text style={[styles.buttonText, isEditing ? {color: 'white'} : {color: '#333'}]}>
+                <Text style={[ProfileStyles.buttonText, isEditing ? {color: 'white'} : {color: '#333'}]}>
                   {isEditing ? 'Save Changes' : 'Edit Information'}
                 </Text>
               </Pressable>
@@ -369,23 +368,28 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               {isEditing && (
                 <Pressable
                   style={({ pressed }) => [
-                    styles.editButton,
+                    ProfileStyles.editButton,
                     { backgroundColor: pressed ? '#FF6B6B' : '#EE9972' }
                   ]}
                   onPress={() => setIsEditing(false)}
                 >
-                  <Text style={styles.buttonText}>Cancel</Text>
+                  <Text style={ProfileStyles.buttonText}>Cancel</Text>
                 </Pressable>
               )}
             </View>
+            
+            <Animated.Text style={[ProfileStyles.feedbackText, { opacity: fadeAnim }]}>
+            {feedbackMessage}
+            </Animated.Text>
+
           </View>
         </View>
 
-        <View style={styles.notificationSection}>
-          <Text style={styles.sectionHeader}>Email notifications</Text>
+        <View style={ProfileStyles.notificationSection}>
+          <Text style={ProfileStyles.sectionHeader}>Email notifications</Text>
           
-          <View style={styles.preferenceRow}>
-            <Text style={styles.preferenceLabel}>Order statuses</Text>
+          <View style={ProfileStyles.preferenceRow}>
+            <Text style={ProfileStyles.preferenceLabel}>Order statuses</Text>
             <Switch
               value={preferences.orderStatuses}
               onValueChange={(value) => handlePreferenceChange('orderStatuses', value)}
@@ -394,8 +398,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             />
           </View>
           
-          <View style={styles.preferenceRow}>
-            <Text style={styles.preferenceLabel}>Password changes</Text>
+          <View style={ProfileStyles.preferenceRow}>
+            <Text style={ProfileStyles.preferenceLabel}>Password changes</Text>
             <Switch
               value={preferences.passwordChanges}
               onValueChange={(value) => handlePreferenceChange('passwordChanges', value)}
@@ -404,8 +408,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             />
           </View>
           
-          <View style={styles.preferenceRow}>
-            <Text style={styles.preferenceLabel}>Special offers</Text>
+          <View style={ProfileStyles.preferenceRow}>
+            <Text style={ProfileStyles.preferenceLabel}>Special offers</Text>
             <Switch
               value={preferences.specialOffers}
               onValueChange={(value) => handlePreferenceChange('specialOffers', value)}
@@ -414,8 +418,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             />
           </View>
           
-          <View style={styles.preferenceRow}>
-            <Text style={styles.preferenceLabel}>Newsletter</Text>
+          <View style={ProfileStyles.preferenceRow}>
+            <Text style={ProfileStyles.preferenceLabel}>Newsletter</Text>
             <Switch
               value={preferences.newsLetter}
               onValueChange={(value) => handlePreferenceChange('newsLetter', value)}
@@ -424,244 +428,35 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             />
           </View>
           
-          <Animated.Text style={[styles.feedbackText, { opacity: fadeAnim }]}>
+          <Animated.Text style={[ProfileStyles.feedbackText, { opacity: fadeAnim }]}>
             {feedbackMessage}
           </Animated.Text>
         </View>
         
         <Pressable
           style={({ pressed }) => [
-            styles.logoutButton,
+            ProfileStyles.logoutButton,
             { backgroundColor: pressed ? '#FF6B6B' : '#EE9972' }
           ]}
           onPress={handleLogout}
         >
-          <Text style={styles.buttonText}>Logout</Text>
+          <Text style={ProfileStyles.buttonText}>Logout</Text>
         </Pressable>
         
         <Pressable
           style={({ pressed }) => [
-            styles.deleteButton,
+            ProfileStyles.deleteButton,
             { backgroundColor: pressed ? '#B00020' : '#FF5252' }
           ]}
           onPress={handleDeleteAccount}
         >
-          <Text style={styles.buttonText}>Delete Account</Text>
+          <Text style={ProfileStyles.buttonText}>Delete Account</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#EDEFEE',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontFamily: FONTS.karlaRegular,
-    fontSize: 18,
-    color: '#495E57',
-  },
-  navbar: {
-    height: 80,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  navButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 150,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  profileIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  cardHeader: {
-    fontSize: 24,
-    fontFamily: FONTS.karlaBold,
-    color: '#333',
-    marginBottom: 20,
-  },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginRight: 20,
-  },
-  imageActions: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  imageButton: {
-    width: '48%',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  form: {
-    marginTop: 10,
-  },
-  inputGroup: {
-    marginBottom: 15,
-  },
-  inputLabel: {
-    fontFamily: FONTS.karlaBold,
-    fontSize: 16,
-    color: '#495E57',
-    marginBottom: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    fontFamily: FONTS.karlaRegular,
-    backgroundColor: '#FAFAFA',
-  },
-  staticInput: {
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    paddingLeft: 0,
-    color: '#333',
-  },
-  editingInput: {
-    backgroundColor: '#FFF',
-    borderColor: '#495E57',
-  },
-  disabledInput: {
-    backgroundColor: '#f0f0f0',
-    color: '#888',
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  passwordInput: {
-    flex: 1,
-  },
-  toggleButton: {
-    marginLeft: 10,
-    padding: 8,
-    borderRadius: 4,
-    backgroundColor: '#EDEFEE',
-  },
-  toggleText: {
-    fontFamily: FONTS.karlaBold,
-    fontSize: 14,
-    color: '#495E57',
-  },
-  passwordHint: {
-    fontFamily: FONTS.karlaRegular,
-    fontSize: 12,
-    color: '#777',
-    marginTop: 5,
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-    marginTop: 10,
-  },
-  editButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  notificationSection: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  sectionHeader: {
-    fontSize: 20,
-    fontFamily: FONTS.karlaBold,
-    color: '#333',
-    marginBottom: 15,
-  },
-  preferenceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  preferenceLabel: {
-    fontFamily: FONTS.karlaRegular,
-    fontSize: 16,
-    color: '#333',
-  },
-  feedbackText: {
-    marginTop: 10,
-    fontFamily: FONTS.karlaRegular,
-    fontSize: 14,
-    color: '#495E57',
-    textAlign: 'center',
-  },
-  logoutButton: {
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  deleteButton: {
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontFamily: FONTS.karlaBold,
-  },
-});
+
 
 export default ProfileScreen;

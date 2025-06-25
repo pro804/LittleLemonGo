@@ -6,6 +6,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { loginUser } from '../utils/auth';
 import { useAuth } from '../context/AuthContext';
+import LoginStyles from '../Styles/LoginStyles';
 
 
 
@@ -33,7 +34,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       Animated.timing(errorAnim, { toValue: 0, duration: 300, useNativeDriver: true, delay: 2000 })
     ]).start();
   };
-
+  // Create animated error style
   const errorStyle = {
     opacity: errorAnim,
     transform: [{
@@ -55,15 +56,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.navbar}>
-        <Image source={require('../assets/branding/Logo.png')} style={styles.logo} />
+    <View style={LoginStyles.container}>
+      <View style={LoginStyles.navbar}>
+        <Image source={require('../assets/branding/Logo.png')} style={LoginStyles.logo} />
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Login</Text>
-          <Text style={styles.subtitle}>Welcome back</Text>
+      <View style={LoginStyles.content}>
+        <View style={LoginStyles.header}>
+          <Text style={LoginStyles.title}>Login</Text>
+          <Text style={LoginStyles.subtitle}>Welcome back</Text>
         </View>
 
         <Formik
@@ -102,17 +103,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <Animated.View 
               style={[
-                styles.form, 
+                LoginStyles.form, 
                 { transform: [{ translateX: shakeAnimation }] }
               ]}
             >
               {/* Form fields */}
               
-              <View style={styles.inputGroup}>
+              <View style={LoginStyles.inputGroup}>
                 <TextInput
                   style={[
-                    styles.input,
-                    loginError && styles.inputError
+                    LoginStyles.input,
+                    loginError && LoginStyles.inputError
                   ]}
                   placeholder="Email"
                   keyboardType="email-address"
@@ -122,15 +123,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                   value={values.email}
                 />
                 {touched.email && errors.email && (
-                  <Text style={styles.error}>{errors.email}</Text>
+                  <Text style={LoginStyles.error}>{errors.email}</Text>
                 )}
               </View>
 
-              <View style={styles.inputGroup}>
+              <View style={LoginStyles.inputGroup}>
                 <TextInput
                   style={[
-                    styles.input,
-                    loginError && styles.inputError
+                    LoginStyles.input,
+                    loginError && LoginStyles.inputError
                   ]}
                   placeholder="Password"
                   secureTextEntry={!showPassword}
@@ -139,27 +140,27 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                   value={values.password}
                 />
                 <TouchableOpacity
-                  style={styles.passwordToggle}
+                  style={LoginStyles.passwordToggle}
                   onPress={() => setShowPassword(!showPassword)}
                 >
-                  <Text style={styles.toggleText}>
+                  <Text style={LoginStyles.toggleText}>
                     {showPassword ? 'Hide' : 'Show'}
                   </Text>
                 </TouchableOpacity>
                 {touched.password && errors.password && (
-                  <Text style={styles.error}>{errors.password}</Text>
+                  <Text style={LoginStyles.error}>{errors.password}</Text>
                 )}
               </View>
 
               {loginError && (
-                <Text style={styles.loginError}>{loginError}</Text>
+                <Text style={LoginStyles.loginError}>{loginError}</Text>
               )}
 
               <TouchableOpacity 
                 style={[
-                  styles.submitButton,
-                  loginError && styles.submitButtonError,
-                  isSubmitting && styles.disabledButton
+                  LoginStyles.submitButton,
+                  loginError && LoginStyles.submitButtonError,
+                  isSubmitting && LoginStyles.disabledButton
                 ]} 
                 onPress={() => handleSubmit()}
                 disabled={isSubmitting}
@@ -167,7 +168,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 {isSubmitting ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text style={styles.buttonText}>Login</Text>
+                  <Text style={LoginStyles.buttonText}>Login</Text>
                 )}
               </TouchableOpacity>
             </Animated.View>
@@ -178,120 +179,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           onPress={() => navigation.navigate('Onboarding')}
           onPressIn={() => setLoginHover(true)}
           onPressOut={() => setLoginHover(false)}
-          style={[styles.signupLink, loginHover && styles.loginHover]}
+          style={[LoginStyles.signupLink, loginHover && LoginStyles.loginHover]}
         >
-          <Text style={styles.signupText}>Don't have an account? Sign Up</Text>
+          <Text style={LoginStyles.signupText}>Don't have an account? Sign Up</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF',
-  },
-  navbar: {
-    height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  logo: {
-    width: 180,
-    height: 56,
-    resizeMode: 'contain',
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 64,
-    fontFamily: 'MarkaziText-Medium',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 40,
-    fontFamily: 'MarkaziText-Regular',
-    color: '#495E57',
-  },
-  form: {
-    marginBottom: 20,
-  },
-  inputGroup: {
-    marginBottom: 15,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
-    fontFamily: 'Karla-Regular',
-  },
-  inputError: {
-    borderColor: 'red',
-    backgroundColor: '#FFF0F0',
-  },
-  loginError: {
-    color: 'red',
-    textAlign: 'center',
-    marginBottom: 15,
-    fontFamily: 'Karla-Bold',
-  },
-  error: {
-    color: 'red',
-    marginTop: 5,
-    fontFamily: 'Karla-Italic',
-  },
-  submitButton: {
-    backgroundColor: '#495E57',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 50,
-  },
-  disabledButton: {
-    backgroundColor: '#AAAAAA',
-  },
-  submitButtonError: {
-    backgroundColor: '#FF6B6B',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontFamily: 'Karla-Bold',
-  },
-  signupLink: {
-    alignSelf: 'center',
-    padding: 10,
-    borderRadius: 8,
-  },
-  loginHover: {
-    backgroundColor: '#F0F0F0',
-  },
-  signupText: {
-    color: '#495E57',
-    fontSize: 16,
-    fontFamily: 'Karla-Bold',
-  },
-  passwordToggle: {
-    position: 'absolute',
-    right: 15,
-    top: 15,
-  },
-  toggleText: {
-    color: '#495E57',
-    fontFamily: 'Karla-Bold',
-  },
-});
 
 export default LoginScreen;

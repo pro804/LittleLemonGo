@@ -1,29 +1,92 @@
-import React, { useState} from "react";
-import { View,Text,TextInput,TouchableOpacity,StyleSheet,Image,Animated } from "react-native";
-import {Formik} from 'formik';
+import React, { useEffect, useRef, useState} from "react";
+import { 
+  View,
+  SafeAreaView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  Animated,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform, 
+  ActivityIndicator,
+  Modal} from "react-native";
+import {Formik} from 'formik'; 
 import * as yup from 'yup';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import { RootStackParamList } from "../types/navigation";
 import { completeOnboarding } from "../utils/auth";
+import Onboardingstyles from "../Styles/OnboardingStyles";
 
 type OnboardingScreenProps = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
 const  OnboardingScreen : React.FC<OnboardingScreenProps> = ({navigation}) =>{
-
+  
+  const [showPassword, setShowPassword] = useState(false);
   const [loginHover, setLoginHover]= useState(false);
-  const [errorAnim] = useState(new Animated.Value(0)); 
-  const [errorMessage, setErrorMessage] = useState('');
 
+  // field for error animations
+  const [formErrorAnim] = useState( new Animated.Value(0)); 
+  const [fieldErrorAnim] = useState(new Animated.Value(0)); 
 
+   // Toast notification
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false); // NEW: Simple show/hide state
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMounted = useRef(true);
+
+  // Cleanup function
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+  
  // Create animated error style
-  const errorStyle = {
-    opacity: errorAnim,
+  const formErrorStyle = {
+    opacity: formErrorAnim,
     transform: [{
-      translateX: errorAnim.interpolate({
+      translateX: formErrorAnim.interpolate({
         inputRange: [0, 0.5, 1],
         outputRange: [-10, 5, 0]
       })
     }]
+  };
+// Create animated error style
+  const fieldErrorStyle ={
+    opacity:fieldErrorAnim
+  };
+
+// Animation for filed level errors
+ useEffect(() => {
+    Animated.timing(fieldErrorAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [fieldErrorAnim]);
+
+  // Animation for form-level errors
+   const animatedFormError = ()=> {
+    Animated.sequence([
+      Animated.timing(formErrorAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(formErrorAnim, { toValue: 0, duration: 300, useNativeDriver: true, delay: 2000 })
+    ]).start();
+  } 
+  // Show toast function
+ const displayToast = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    
+    timeoutRef.current = setTimeout(() => {
+      if (isMounted.current) {
+        setShowToast(false);
+      }
+    }, 4000);
   };
 
    // validation with schema 
@@ -36,186 +99,266 @@ const  OnboardingScreen : React.FC<OnboardingScreenProps> = ({navigation}) =>{
       .matches(/^[0-9\s-]{10,15}$/, 'Invalid phone number (10-15 digits)')
       .nullable(),
   });
-
-   const animateError = () => {
-    Animated.sequence([
-      Animated.timing(errorAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.timing(errorAnim, { toValue: 0, duration: 300, useNativeDriver: true, delay: 2000 })
-    ]).start();
-  };
-
-  
+ 
   return(
-    <View style={styles.container}>
-      {/*Navbar */}
-      <View style={styles.navbar}>
-        <Image source={require('../assets/branding/Logo.png')} style={styles.logo}/>
-      </View>
-
-      {/*Content Section */}
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Sign Up</Text>
+     <SafeAreaView style={Onboardingstyles.container}>      
+        {/* Toast Modal */}
+        <Modal
+        visible={showToast}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowToast(false)}
+      >
+        <View style={Onboardingstyles.toastContainer}>
+          <View style={Onboardingstyles.toast}>
+            <Text style={Onboardingstyles.toastText}>{toastMessage}</Text>
+            <TouchableOpacity 
+              onPress={() => setShowToast(false)}
+              style={Onboardingstyles.closeButton}
+              accessibilityLabel="Close Toast"
+            >
+              <Text style={Onboardingstyles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+      </Modal>
+      
 
-
-      {/*Slogan with background */}
-
-      <View style={styles.sloganContainer}>
-        <Text style={styles.slogan}>
-          Join our familly table for exclusive offers, seasonal feasts with Mediterranean flavors.
-        </Text>
-
-        <Image source={require('../assets/images/Hero image.png')}style={styles.sloganImage}/>
-
+      {/*Navbar */}
+      <View style={Onboardingstyles.navbar}>
+        <Image source={require('../assets/branding/Logo.png')} style={Onboardingstyles.logo}/>
       </View>
-
-      {/*Signup Form */}
-
-       <Formik
-          initialValues={{ 
-            firstName: '',
-            lastName: '',
-            email: '',
-            password: '',
-            phone: ''}}
-
-          validationSchema={signupSchema}
-          onSubmit={async (values, { setSubmitting }) => {
-            try {
-              // Clean phone number (remove non-digit characters)
-              const cleanedValues = {
-                ...values,
-                phone: values.phone ? values.phone.replace(/\D/g, '') : undefined
-              };
-              await completeOnboarding(values);
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Home' }],
-              });
-            } catch (e) {
-              console.error('Onboarding error:', e);
-              animateError();  
-              
-              // Set specific error messages
-              if (errorMessage=== 'Email already registered') {
-                setErrorMessage('This email is already registered. Please login instead.');
-              } else {
-                setErrorMessage('Failed to create account. Please try again.');
-              }
-            } finally {
-              setSubmitting(false);
-            }
-          }}
+      
+      {/* Hero Section with Search Bar */}
+            <View style={Onboardingstyles.heroSection}>
+              <View style={Onboardingstyles.heroContent}>
+                <View style={Onboardingstyles.heroTextContainer}>
+      
+                  <Text 
+                  style={Onboardingstyles.heroTitle} 
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.8}
+                  >
+                    Little Lemon
+                  </Text>
+      
+                  <Text 
+                  style={Onboardingstyles.heroSubtitle}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.8}
+                  >
+                   Chicago
+                  </Text>
+                  
+                  <Text style={Onboardingstyles.heroDescription} >
+                    Sign Up for seasonal
+                    {'\n'}
+                    menu reveals, and special
+                    {'\n'}
+                    events, Chicago's rustic 
+                    {'\n'}
+                    Mediterranean escape
+                    {'\n'}
+                    awaits.
+                  </Text>
+                </View>
+                <View style={Onboardingstyles.heroImageContainer}>
+                <Image 
+                  source={require('../assets/images/Hero image.png')} 
+                  style={Onboardingstyles.heroImage} 
+                />
+                </View>
+              </View>
+            </View>
+      
+      {/*Signup Form Scrollable */}
+     <KeyboardAvoidingView
+        behavior={Platform.OS==='ios'? "padding": "height"}
+        style={Onboardingstyles.keyboardAvoid}
         >
-          
+          <ScrollView
+          contentContainerStyle={Onboardingstyles.scrollContainer}
+          keyboardShouldPersistTaps='handled'
+          >
+            {/*Signup Form Card */}
+            <View style={Onboardingstyles.formCard}>
+              <Formik
+                  initialValues={{ 
+                    firstName: '',
+                    lastName: '',
+                    email: '',
+                    password: '',
+                    phone: ''}}
 
-          {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting, isValid }) => (
-             <View style={styles.form}>
-              <View style={styles.inputGroup}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="First Name*"
-                  onChangeText={handleChange('firstName')}
-                  onBlur={handleBlur('firstName')}
-                  value={values.firstName}
-                />
-                {touched.firstName && errors.firstName && (
-                  <Animated.Text style={[styles.error, errorStyle]}>
-                    {errors.firstName}
-                  </Animated.Text>
-                )}
-              </View>
+                  validationSchema={signupSchema}
+                  onSubmit={async (values, { setSubmitting }) => {
+                    try {                       
+                      // Clear any existing toast
+                      setShowToast(false);
+                      if (timeoutRef.current) {
+                        clearTimeout(timeoutRef.current);
+                      }
 
-              <View style={styles.inputGroup}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Last Name*"
-                  onChangeText={handleChange('lastName')}
-                  onBlur={handleBlur('lastName')}
-                  value={values.lastName}
-                />
-                {touched.lastName && errors.lastName && (
-                  <Animated.Text style={[styles.error, errorStyle]}>
-                    {errors.lastName}
-                  </Animated.Text>
-                )}
-              </View>
-              
-              <View style={styles.inputGroup}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email*"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  onChangeText={handleChange('email')}
-                  onBlur={handleBlur('email')}
-                  value={values.email}
-                />
-                {touched.email && errors.email && (
-                  <Animated.Text style={[styles.error, errorStyle]}>
-                    {errors.email}
-                  </Animated.Text>
-                )}
-              </View>
+                      // Clean phone number (remove non-digit characters)
+                      const cleanedValues = {
+                        ...values,
+                        phone: values.phone ? values.phone.replace(/\D/g, '') : undefined
+                      };
+                      await completeOnboarding(cleanedValues);
 
-               <View style={styles.inputGroup}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password*"
-                  secureTextEntry
-                  onChangeText={handleChange('password')}
-                  onBlur={handleBlur('password')}
-                  value={values.password}
-                />
-                {touched.password && errors.password && (
-                  <Animated.Text style={[styles.error, errorStyle]}>
-                    {errors.password}
-                  </Animated.Text>
-                )}
-              </View>
+                      //show success Toast
+                      displayToast('Account created successfully! Redirecting...');
 
-            <View style={styles.inputGroup}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Phone (optional)"
-                  keyboardType="phone-pad"
-                  onChangeText={handleChange('phone')}
-                  onBlur={handleBlur('phone')}
-                  value={values.phone}
-                />
-                {touched.phone && errors.phone && (
-                  <Animated.Text style={[styles.error, errorStyle]}>
-                    {errors.phone}
-                  </Animated.Text>
-                )}
-              </View>
+                     // Navigate after delay
+                      timeoutRef.current = setTimeout(() => {
+                        navigation.reset({
+                          index: 0,
+                          routes: [{ name:'Home'}],
+                        });
+                      }, 2000);
+                    } catch (e: any) {
+                      console.error('Onboarding error:', e);
+                  
+                    let message = 'Failed to create account. Please try again.';
+                    // Handle error cases
+                  if (e.message) {
+                    const errorMessage = e.message.toLowerCase();
+                    
+                    if (errorMessage.includes('email already registered') || 
+                        errorMessage.includes('email already exists')) {
+                      message = 'This email is already registered. Please login instead.';
+                    } else if (errorMessage.includes('password')) {
+                      message = 'Password requirements not met. Must be at least 6 characters.';
+                    } else if (errorMessage.includes('email') || 
+                               errorMessage.includes('invalid email')) {
+                      message = 'Invalid email format. Please enter a valid email.';
+                    } else if (errorMessage.includes('network') || 
+                               errorMessage.includes('request') || 
+                               errorMessage.includes('connection')) {
+                      message = 'Network error. Please check your internet connection.';
+                    }
+                  }
+                  
+                  displayToast(message);
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
+            >                 
+                  {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting, isValid }) => (
+                    <View style={Onboardingstyles.form}>
+                      <View style={Onboardingstyles.inputGroup}>
+                        <TextInput
+                          style={Onboardingstyles.input}
+                          placeholder="First Name*"
+                          onChangeText={handleChange('firstName')}
+                          onBlur={handleBlur('firstName')}
+                          value={values.firstName}
+                        />
+                        {touched.firstName && errors.firstName && (
+                          <Animated.Text style={[Onboardingstyles.error, fieldErrorStyle]}>
+                            {errors.firstName}
+                          </Animated.Text>
+                        )}
+                      </View>
 
+                      <View style={Onboardingstyles.inputGroup}>
+                        <TextInput
+                          style={Onboardingstyles.input}
+                          placeholder="Last Name*"
+                          onChangeText={handleChange('lastName')}
+                          onBlur={handleBlur('lastName')}
+                          value={values.lastName}
+                        />
+                        {touched.lastName && errors.lastName && (
+                          <Animated.Text style={[Onboardingstyles.error, fieldErrorStyle]}>
+                            {errors.lastName}
+                          </Animated.Text>
+                        )}
+                      </View>
+                      
+                      <View style={Onboardingstyles.inputGroup}>
+                        <TextInput
+                          style={Onboardingstyles.input}
+                          placeholder="Email*"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          onChangeText={handleChange('email')}
+                          onBlur={handleBlur('email')}
+                          value={values.email}
+                        />
+                        {touched.email && errors.email && (
+                          <Animated.Text style={[Onboardingstyles.error, fieldErrorStyle]}>
+                            {errors.email}
+                          </Animated.Text>
+                        )}
+                      </View>
 
-              {/* Add form-level error message */}
-              {errorMessage ? (
-                <Animated.Text style={[styles.error, styles.formError, errorStyle]}>
-                  {errorMessage}
-                </Animated.Text>
-              ) : null}
+                      <View style={Onboardingstyles.inputGroup}>
+                        <TextInput
+                          style={Onboardingstyles.input}
+                          placeholder="Password*"
+                          secureTextEntry ={!showPassword}
+                          onChangeText={handleChange('password')}
+                          onBlur={handleBlur('password')}
+                          value={values.password}
+                        />
+                        <TouchableOpacity
+                          style={Onboardingstyles.passwordToggle}
+                          onPress={() => setShowPassword(!showPassword)}
+                        >
+                          <Text style={Onboardingstyles.toggleText}>
+                            {showPassword ? 'Hide' : 'Show'}
+                          </Text>
+                        </TouchableOpacity>
+                        {touched.password && errors.password && (
+                          <Animated.Text style={[Onboardingstyles.error, fieldErrorStyle]}>
+                            {errors.password}
+                          </Animated.Text>
+                        )}
+                      </View>
+
+                    <View style={Onboardingstyles.inputGroup}>
+                        <TextInput
+                          style={Onboardingstyles.input}
+                          placeholder="Phone (optional)"
+                          keyboardType="phone-pad"
+                          onChangeText={handleChange('phone')}
+                          onBlur={handleBlur('phone')}
+                          value={values.phone}
+                        />
+                        {touched.phone && errors.phone && (
+                          <Animated.Text style={[Onboardingstyles.error, fieldErrorStyle]}>
+                            {errors.phone}
+                          </Animated.Text>
+                        )}
+                      </View>
 
               <TouchableOpacity
                 style={[
-                  styles.submitButton,
-                  (isSubmitting || !isValid) && styles.disabledButton
+                  Onboardingstyles.submitButton,
+                  (isSubmitting || !isValid) && Onboardingstyles.disabledButton
                 ]}
                 onPress={() => {
-                  if (!isValid) animateError();
+                  if (!isValid) {
+                    displayToast('Please fill in all required fields correctly');
+                    animatedFormError();
+                  }
                   handleSubmit();
                 }}
                 disabled={isSubmitting || !isValid}
+                accessibilityLabel="Sign up"
               >
-                <Text style={styles.buttonText}>
-                  {isSubmitting ? 'Creating Account...' : 'Sign Up'}
-                </Text>
+                {isSubmitting ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={Onboardingstyles.buttonText}>Sign Up</Text>
+                )}
               </TouchableOpacity>
-            </View>
-          )}
+                </View>
+              )}
 
        </Formik>
 
@@ -223,121 +366,18 @@ const  OnboardingScreen : React.FC<OnboardingScreenProps> = ({navigation}) =>{
           onPress={() => navigation.navigate('Login')}
           onPressIn={() => setLoginHover(true)}
           onPressOut={() => setLoginHover(false)}
-          style={[styles.loginLink, loginHover && styles.loginHover]}
+          style={[Onboardingstyles.loginLink, loginHover && Onboardingstyles.loginHover]}
         >
-          <Text style={styles.loginText}>Already have an account? Login</Text>
+          <Text style={Onboardingstyles.loginText}>Already have an account? Login</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
+  </SafeAreaView>
+  
   )
 };
 
 
-
-
-
-
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#EDEFEE',
-  },
-  navbar: {
-    height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  logo: {
-    width: 180,
-    height: 56,
-    resizeMode: 'contain',
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
-  header: {
-    marginBottom: 5,
-  },
-  title: {
-    fontSize: 64,
-    fontFamily: 'MarkaziText-Medium',
-    color: '#333',
-  },
-  sloganContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#F4CE14',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 30,
-    alignItems: 'center',
-  },
-  slogan: {
-    fontSize: 18,
-    fontFamily: 'Karla-Bold',
-    color: '#333',
-    flex: 1,
-  },
-  sloganImage: {
-    width: 150,
-    height: 170,
-    marginLeft: 10,
-  },
-  form: {
-    marginBottom: 20,
-  },
-  formError: {
-    textAlign: 'center',
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  inputGroup: {
-    marginBottom: 15,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
-    fontFamily: 'Karla-Regular',
-  },
-  error: {
-    color: 'red',
-    marginTop: 5,
-    fontFamily: 'Karla-Italic',
-  },
-  submitButton: {
-    backgroundColor: '#495E57',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-  },
-  disabledButton: {
-    backgroundColor: '#AAAAAA',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontFamily: 'Karla-Bold',
-  },
-  loginLink: {
-    alignSelf: 'center',
-    padding: 10,
-    borderRadius: 8,
-  },
-  loginHover: {
-    backgroundColor: '#F0F0F0',
-  },
-  loginText: {
-    color: '#495E57',
-    fontSize: 16,
-    fontFamily: 'Karla-Bold',
-  },
-});
 
 export default OnboardingScreen

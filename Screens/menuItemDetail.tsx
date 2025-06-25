@@ -1,14 +1,14 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
-import { FONTS } from '../utils/fonts';
-import { MenuItemDisplay } from '../types'; 
-
+import { View, Text, Image, ScrollView } from 'react-native';
+import MenuItemsDetailsStyles from '../Styles/MenuItemDetailsStyles';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { Pressable } from 'react-native-gesture-handler';
 
 type MenuItemDetailsProps = NativeStackScreenProps<RootStackParamList, 'MenuItemDetails'>;
 
-const MenuItemDetailsScreen: React.FC<MenuItemDetailsProps> = ({  route}) => {
+const MenuItemDetailsScreen: React.FC<MenuItemDetailsProps> = ({  route, navigation}) => {
   const { menuItem} = route.params;
 
   const getImageSource = () => {
@@ -29,79 +29,32 @@ const MenuItemDetailsScreen: React.FC<MenuItemDetailsProps> = ({  route}) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={MenuItemsDetailsStyles.container}>
+      <View style={MenuItemsDetailsStyles.imageContainer}>
+        <Pressable onPress={() => navigation.goBack()} style={MenuItemsDetailsStyles.navButton}>
+          <AntDesign name="leftcircle" size={40} color="#495E57" />
+        </Pressable>
       <Image 
         source={getImageSource()}
-        style={styles.image}
+        style={MenuItemsDetailsStyles.image}       
       />
+      </View>
       
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{menuItem.title}</Text>
-          <Text style={styles.price}>${menuItem.price}</Text>
+      <View style={MenuItemsDetailsStyles.content}>
+        <View style={MenuItemsDetailsStyles.header}>
+          <Text style={MenuItemsDetailsStyles.title}>{menuItem.title}</Text>
+          <Text style={MenuItemsDetailsStyles.price}>${menuItem.price}</Text>
         </View>
         
-        <View style={styles.categoryContainer}>
-          <Text style={styles.category}>{menuItem.category}</Text>
+        <View style={MenuItemsDetailsStyles.categoryContainer}>
+          <Text style={MenuItemsDetailsStyles.category}>{menuItem.category}</Text>
         </View>
         
-        <Text style={styles.description}>{menuItem.description}</Text>
+        <Text style={MenuItemsDetailsStyles.description}>{menuItem.description}</Text>
       </View>
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF',
-  },
-  image: {
-    width: '100%',
-    height: 300,
-    resizeMode: 'cover',
-  },
-  content: {
-    padding: 25,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  title: {
-    fontSize: 32,
-    fontFamily: FONTS.markaziTextMedium,
-    color: '#333',
-    flex: 1,
-    marginRight: 10,
-  },
-  price: {
-    fontSize: 28,
-    fontFamily: FONTS.markaziTextMedium,
-    color: '#495E57',
-  },
-  categoryContainer: {
-    backgroundColor: '#495E57',
-    borderRadius: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    alignSelf: 'flex-start',
-    marginBottom: 25,
-  },
-  category: {
-    fontSize: 18,
-    fontFamily: FONTS.karlaBold,
-    color: '#F4CE14',
-    textTransform: 'capitalize',
-  },
-  description: {
-    fontSize: 18,
-    fontFamily: FONTS.karlaRegular,
-    color: '#333',
-    lineHeight: 26,
-  },
-});
 
 export default MenuItemDetailsScreen;

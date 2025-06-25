@@ -42,8 +42,6 @@ export async function getMenuItems(){
     }
 
 // Save all items
-
-// Fixed save function to prevent duplicates
 export async function saveMenuItems(menuItems: Omit<MenuItemRow,'id'>[]){
   const database = await db;
   

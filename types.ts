@@ -1,5 +1,4 @@
 
-
 // For API data
 
 interface Image {
