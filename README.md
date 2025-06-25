@@ -6,7 +6,7 @@
 [![React Native](https://img.shields.io/badge/React_Native-0.79.4-blue.svg?logo=react)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo-53.0.12-lightgrey.svg?logo=expo)](https://expo.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
-[![Formik](https://img.shields.io/badge/Formik-2.4.6-yellowgreen)](https://formik.org)
+[![Formik](https://img.shields.io/badge/Formik-2.4.6-yellowgreen)](https://formik.org)[![Figma](https://img.shields.io/badge/Figma-Wireframes-0AC97F?logo=figma)](https://www.figma.com/design/5aTp5GF9yl0HG5X4APJOJX/LittleLemonGo?node-id=0-1&t=iWj6P0nGLbtsJHSR-1)
 
 ## Project Overview
 This TypeScript-based application is the final project submission for the **Meta React Native Specialization** on Coursera. Built with React Native and Expo.
@@ -36,6 +36,7 @@ This TypeScript-based application is the final project submission for the **Meta
   - Responsive design
 
 ## 📱 UI Wireframes
+_Designed with Figma (Wireframes)_
 ```bash
 /WireFrames directory
 ```
@@ -47,6 +48,8 @@ This TypeScript-based application is the final project submission for the **Meta
 |Home| ![Home](/WireFrames/04_Home.png)      |Menu browsing with search/filters|
 |MenuItemsDetails| ![MenuItemDetails](/WireFrames/05_MenuItemDetailScreen.png) |Dish information display
 | Profile | ![Profile](/WireFrames/06_Profile.png) | User settings management |
+
+> Wireframes focus on user flow and functionality rather than visual design details
 
 ## ▶️ Interactive Walkthrough
 ![UI Demo](/assets/Demo/Thumbnail.png)(https://www.canva.com/design/DAGrP02K6yU/wjHQQR1MMax_pNdEZBGPGw/watch?utm_content=DAGrP02K6yU&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hf05d260251
