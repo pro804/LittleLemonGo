@@ -23,6 +23,8 @@ This TypeScript-based application is the final project submission for the **Meta
   - Search functionality
   - Menu item details view
 - **User Experience**
+  - Real-time profile synchronization
+    (Avatar updates reflect instantly across all screens)
   - Personalized profile with avatar
   - Notification preferences
   - Smooth navigation between screens
@@ -105,12 +107,6 @@ The project leverages TypeScript for:
 ## Contributing  🤝
 Pull requests welcome! For major changes, please open an issue first.
 
-## Future Enhancements 🚀
-
-- **Order Placement System** - In-app ordering capability
-- **Reservation Booking** - Table reservation feature
-- **Dark Mode** - User-selectable theme
-- **Push Notifications** - Order status updates
 
 ## 📝 License
 

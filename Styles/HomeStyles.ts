@@ -50,7 +50,7 @@ const HomeStyles = StyleSheet.create({
   profileImage: {
     width: 48,
     height: 48,
-    borderRadius: 18,
+    borderRadius: 100,
     marginTop: 4,
   },
   

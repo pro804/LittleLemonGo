@@ -19,13 +19,14 @@ const ProfileStyles = StyleSheet.create({
   navbar: {
     height: 'auto',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
     backgroundColor: '#FFF',
     borderBottomWidth: 1,
     borderBottomColor: '#EEE',
-    marginTop: 10
+    marginTop: 10,
+    
   },
   scrollContainer: {
     flex: 1,
@@ -38,17 +39,14 @@ const ProfileStyles = StyleSheet.create({
     width: 40,
     height: 40,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center', 
   },
   logo: {
     width: 180,
     height: 56,
     resizeMode: 'contain',
-  },
-  profileIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 18,
+    alignSelf: 'center',
+    marginHorizontal:'auto'
   },
   card: {
     backgroundColor: '#FFF',

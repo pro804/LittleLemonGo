@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -15,20 +15,18 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { getRegisteredUsers, updateUser, deleteAccount, } from '../utils/auth';
+import { getCurrentUser, updateUser, deleteAccount, } from '../utils/auth';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import AvatarPicker from '../components/ProfileScreen/AvatarPicker';
+import useFeedback from '../hooks/ProfileScreen/useFeedback';
+import { UserData } from '../types';
+
+
 
 type ProfileScreenProps = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
-// Define the UserData type
-type UserData = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  password?: string;
-};
+
 
 // Define the NotificationPreferences type
 type NotificationPreferences = {
@@ -48,68 +46,81 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     newsLetter: true
   });
 
-  const [feedbackMessage, setFeedbackMessage] = useState<string>('');
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  //Feedback hook
+  const { feedbackMessage, fadeAnim, showFeedback } = useFeedback();
   
-  // Load user data and preferences
-  const loadData = useCallback(async () => {
-    const userArray = await getRegisteredUsers();
-    if (userArray && userArray.length > 0) {
-      setUserData(userArray[0]);
-    }
-    
+
+   const loadData = useCallback(async () => {
     try {
+      const currentUser = await getCurrentUser();
+      if (currentUser) {
+        setUserData(currentUser);
+      }
+      
       const storedPrefs = await AsyncStorage.getItem('notificationPreferences');
       if (storedPrefs) {
         setPreferences(JSON.parse(storedPrefs));
       }
     } catch (error) {
-      console.error('Failed to load preferences:', error);
+      console.error('Failed to load data:', error);
+      showFeedback('Failed to load profile data');
     }
-  }, []);
+  }, [showFeedback]);
 
-  // Load data
-    useEffect(() => {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useFocusEffect(
+    useCallback(() => {
       loadData();
-    }, [loadData]);
-
-    // Reload data for focus changes
-    useFocusEffect(
-      useCallback(() => {
-        loadData();
-      }, [loadData])
-    );
+    }, [loadData])
+  );
 
   // Handle update of user profile
   const handleUpdate = async () => {
-    if (!userData) return;
+  if (!userData) return;
+  
+  // Validation
+  if (!userData.firstName || !userData.lastName || !userData.email) {
+    showFeedback('Please fill all required fields');
+    return;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) {
+    showFeedback('Please enter a valid email');
+    return;
+  }
+  
+  try {
+    // Prepare data without password if empty
+    const updateData: Partial<UserData> = {
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      phone: userData.phone,
+      avatar: userData.avatar
+    };
     
-    // Validation
-    if (!userData.firstName || !userData.lastName || !userData.email) {
-      showFeedback('Please fill all required fields');
-      return;
+    // Only include password if it's set
+    if (userData.password) {
+      updateData.password = userData.password;
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) {
-      showFeedback('Please enter a valid email');
-      return;
+    const success = await updateUser(updateData);
+    if (success) {
+      showFeedback('Profile updated successfully');
+      setIsEditing(false);
+    } else {
+      showFeedback('Failed to update profile');
     }
-    
-    try {
-      const success = await updateUser(userData);
-      if (success) {
-        showFeedback('Profile updated successfully');
-        setIsEditing(false);
-      } else {
-        showFeedback('Failed to update profile');
-      }
-    } catch (error) {
-      console.error('Update error:', error);
-      showFeedback('Error updating profile');
-    }
-  };
+  } catch (error) {
+    console.error('Update error:', error);
+    showFeedback('Error updating profile');
+  }
+};
 
   // Save notification preferences
   const savePreferences = useCallback(async (newPreferences: NotificationPreferences) => {
@@ -121,25 +132,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       console.error('Failed to save preferences:', error);
       showFeedback('Failed to save preferences');
     }
-  }, []);
+  }, [showFeedback]);
 
-  // Show animated feedback
-  const showFeedback = useCallback((message: string) => {
-    setFeedbackMessage(message);
-    Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 300,
-        delay: 1500,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [fadeAnim]);
+  
 
   // Handle preference changes
   const handlePreferenceChange = useCallback((preference: keyof NotificationPreferences, value: boolean) => {
@@ -209,19 +204,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       <View style={ProfileStyles.navbar}>
         <Pressable onPress={() => navigation.goBack()} style={ProfileStyles.navButton}>
           <AntDesign name="leftcircle" size={32} color="#495E57" />
-        </Pressable>
-        
+        </Pressable> 
         <Image 
           source={require('../assets/branding/Logo.png')} 
           style={ProfileStyles.logo} 
-        />
-        
-        <Pressable onPress={() => navigation.navigate('Profile')} style={ProfileStyles.navButton}>
-          <Image 
-            source={require('../assets/images/Profile.png')} 
-            style={ProfileStyles.profileIcon} 
-          />
-        </Pressable>
+        />       
       </View>
 
       <ScrollView 
@@ -231,35 +218,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       >
         <View style={ProfileStyles.card}>
           <Text style={ProfileStyles.cardHeader}>Personal Information</Text>
-          
-          <View style={ProfileStyles.profileSection}>
-            <Image 
-              source={require('../assets/images/Profile.png')}
-              style={ProfileStyles.profileImage} 
-            />
-            
-            <View style={ProfileStyles.imageActions}>
-              <Pressable 
-                style={({ pressed }) => [
-                  ProfileStyles.imageButton,
-                  { backgroundColor: pressed ? '#F4CE14' : '#495E57' }
-                ]}
-                onPress={() => console.log('Change image')}
-              >
-                <Text style={ProfileStyles.buttonText}>Change</Text>
-              </Pressable>
-              
-              <Pressable 
-                style={({ pressed }) => [
-                  ProfileStyles.imageButton,
-                  { backgroundColor: pressed ? '#FF6B6B' : '#EE9972' }
-                ]}
-                onPress={() => console.log('Remove image')}
-              >
-                <Text style={ProfileStyles.buttonText}>Remove</Text>
-              </Pressable>
-            </View>
-          </View>
+
+            {/* AvatarPicker component */}
+          <AvatarPicker
+            currentAvatar={userData.avatar}
+            onChange={async (newAvatar) => {
+              setUserData(prev => prev ? { ...prev, avatar: newAvatar } : null);
+              await updateUser({ avatar: newAvatar });
+              showFeedback('Avatar updated!');
+            }}
+            onRemove={async () => {
+              setUserData(prev => prev ? { ...prev, avatar: undefined } : null);
+              await updateUser({ avatar: undefined });
+              showFeedback('Avatar removed');
+            }}
+          />        
           
           {/* Form section */}
           <View style={ProfileStyles.form}>

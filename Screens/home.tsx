@@ -20,6 +20,10 @@ import { MenuItemDisplay } from "../types";
 import { fetch } from 'expo/fetch';
 import CategoryFilter from "../components/HomeScreen/CategoryFilter";
 import { MemoizedMenuItem } from "../components/HomeScreen/MenuItemCard";
+import { getCurrentUser } from "../utils/auth";
+import { UserData } from "../types";
+
+
 
 
 type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
@@ -29,6 +33,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   
   // State & Refs
   const { isAuthenticated } = useAuth();
+  const [User, setUser] = useState<UserData|null>(null);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
   const [activeCategories, setActiveCategories] = useState<string[]>([]);
@@ -41,6 +46,35 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const activeCategoriesRef = useRef<string[]>([]);
   const searchTextRef = useRef('');
   
+ 
+  // Load Function 
+  const loadUserData = useCallback(async () => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (isMounted.current) {
+        setUser(currentUser);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  }, []);
+   // handles theInitial load on mount
+  useEffect(() => {
+    isMounted.current = true;
+    loadUserData();
+    return () => {
+      isMounted.current = false;
+    };
+  }, [loadUserData]);
+
+  // Reload user data when screen focuses
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+    }, [loadUserData])
+  );
+
+
   // Update refs when state changes
   useEffect(() => {
     activeCategoriesRef.current = activeCategories;
@@ -163,7 +197,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         setRefreshing(false);
       }
     }
-  }, [fetchMenuData, loadMenuItems]);
+  }, [fetchMenuData, loadMenuItems ]);
 
   
   // Category Toggle
@@ -202,6 +236,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     );
   }
 
+  
+
   return (
     <View style={HomeStyles.container}>
       {/* Top Navigation Bar */}
@@ -216,8 +252,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           style={HomeStyles.profileContainer}
           onPress={() => navigation.navigate('Profile')}
         >
-          <Image 
-            source={require('../assets/images/Profile.png')} 
+          <Image  
+          source={
+            User?.avatar
+              ? { uri:User.avatar } 
+              : require('../assets/images/Profile.png') 
+          }
             style={HomeStyles.profileImage} 
           />
         </Pressable>
